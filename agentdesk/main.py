@@ -44,5 +44,11 @@ def chat(
         _print_result(result, debug)
 
 
+@app.command()
+def version() -> None:
+    """Show CLI version."""
+    typer.echo("AgentDesk CLI 1.0.0")
+
+
 if __name__ == "__main__":
     app()
