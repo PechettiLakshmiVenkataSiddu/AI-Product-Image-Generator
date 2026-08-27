@@ -61,8 +61,8 @@ def build_agent_executor(session_id: str = "default", debug: bool = False) -> Ag
 
 
 def run_agent_turn(message: str, session_id: str = "default", debug: bool = False) -> dict:
-    executor = build_agent_executor(session_id=session_id, debug=debug)
     try:
+        executor = build_agent_executor(session_id=session_id, debug=debug)
         return executor.invoke({"input": message})
     except Exception as exc:  # noqa: BLE001
         logger.warning("Primary agent execution failed, using offline fallback: %s", exc)
@@ -108,7 +108,7 @@ def run_offline_fallback(message: str, debug: bool = False, error_text: str = ""
         )
         return {"output": output, "intermediate_steps": steps}
 
-    if "write" in lowered and "workspace" in lowered:
+    if "write" in lowered:
         relative_path = _extract_workspace_path(message)
         content = _extract_content(message)
         payload = f"path={relative_path}\ncontent={content}"
@@ -125,20 +125,20 @@ def run_offline_fallback(message: str, debug: bool = False, error_text: str = ""
 
 
 def _extract_expression_from_text(text: str) -> str | None:
-    math_chars = re.sub(r"[^0-9+\\-*/(). ]", "", text)
-    if re.search(r"\\d", math_chars) and any(op in math_chars for op in ["+", "-", "*", "/"]):
+    math_chars = re.sub(r"[^0-9+\-*/(). ]", "", text)
+    if re.search(r"\d", math_chars) and any(op in math_chars for op in ["+", "-", "*", "/"]):
         compact = " ".join(math_chars.split())
         if compact:
             return compact
 
-    times_match = re.search(r"(\\d+)\\s+times\\s+(\\d+)", text.lower())
+    times_match = re.search(r"(\d+)\s+times\s+(\d+)", text.lower())
     if times_match:
         return f"{times_match.group(1)} * {times_match.group(2)}"
     return None
 
 
 def _extract_first_decimal(text: str) -> float | None:
-    for match in re.findall(r"\\d+\\.\\d+|\\d+", text):
+    for match in re.findall(r"\d+\.\d+|\d+", text):
         try:
             value = float(match)
         except ValueError:
@@ -149,7 +149,7 @@ def _extract_first_decimal(text: str) -> float | None:
 
 
 def _extract_workspace_path(text: str) -> str:
-    match = re.search(r"(workspace/\\S+|\\.\\./\\S+)", text)
+    match = re.search(r"(workspace/\S+|\.\./\S+)", text)
     if not match:
         return "notes.txt"
     raw_path = match.group(1).strip().rstrip(".,)")
