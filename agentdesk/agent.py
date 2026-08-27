@@ -131,9 +131,10 @@ def _extract_expression_from_text(text: str) -> str | None:
         if compact:
             return compact
 
-    times_match = re.search(r"(\d+)\s+times\s+(\d+)", text.lower())
-    if times_match:
-        return f"{times_match.group(1)} * {times_match.group(2)}"
+    words = text.lower().replace("?", " ").replace(",", " ").split()
+    for idx in range(len(words) - 2):
+        if words[idx].isdigit() and words[idx + 1] == "times" and words[idx + 2].isdigit():
+            return f"{words[idx]} * {words[idx + 2]}"
     return None
 
 
